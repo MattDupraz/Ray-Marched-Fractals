@@ -1,0 +1,11 @@
+bin/
+build/
+tests/
+
+Makefile
+.qmake.stash
+.pro.user
+
+*.o
+*.out
+*.exe

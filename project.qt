@@ -1,0 +1,30 @@
+CONFIG += c++14
+
+TARGET = app
+
+win32:LIBS += -lopengl32
+QT += core gui opengl widgets
+
+INCLUDEPATH = src
+
+DESTDIR = bin
+OBJECTS_DIR = build
+MOC_DIR = build
+RCC_DIR = build
+
+SOURCES += src/main.cpp \
+           src/gl_widget.cpp
+
+HEADERS += src/gl_widget.h
+
+unix|macx {
+	system(mkdir -p build)
+	system(mkdir -p bin)
+}
+
+win32|win64 {
+	system(md build)
+	system(md bin)
+}
+
+RESOURCES += src/resources.qrc
