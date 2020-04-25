@@ -19,5 +19,7 @@ class GLWidget : public QOpenGLWidget {
 		
 		float camera_pitch = 0.0;
 		float camera_yaw = 0.0;
-		QVector3D camera_pos = QVector3D(0.0, 0.0, -4.0);
+		QVector3D camera_pos = QVector3D(0.0, 0.0, -3.0);
+
+		float total_time = 0.0;
 };

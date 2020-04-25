@@ -2,10 +2,14 @@
 #define MARCH_STEPS 1000
 #define MARCH_THRESHOLD 4e-3
 #define ESCAPE_THRESHOLD 20.0
-#define DIST_ITER 10
+#define SERPINSKI_ITER 10
+#define MANDELBULB_ITER 15
+#define MANDELBULB_THRESHOLD 20.0
+//#define MANDELBULB_POWER 8.0
 
 uniform float aspect_ratio;
 uniform mat4 camera_transform;
+uniform float mandelbulb_power;
 
 varying vec2 uv_coord;
 
@@ -13,7 +17,8 @@ float sq(float f) {
 	return f * f;
 }
 
-float dist(vec3 pos) {
+// http://blog.hvidtfeldts.net/index.php/2011/08/distance-estimated-3d-fractals-iii-folding-space/ 
+float dist_serpinski(vec3 pos) {
 	vec3 a1 = vec3(1,1,1);
 	vec3 a2 = vec3(-1,-1,1);
 	vec3 a3 = vec3(1,-1,-1);
@@ -21,7 +26,7 @@ float dist(vec3 pos) {
 	vec3 c;
 	int n = 0;
 	float dist, d;
-	while (n < DIST_ITER) {
+	while (n < SERPINSKI_ITER) {
 		c = a1; dist = length(pos-a1);
 		d = length(pos-a2); if (d < dist) { c = a2; dist=d; }
 		d = length(pos-a3); if (d < dist) { c = a3; dist=d; }
@@ -31,7 +36,33 @@ float dist(vec3 pos) {
 	}
 
 	return length(pos) * pow(2.0, float(-n));
+}
 
+// http://celarek.at/wp/wp-content/uploads/2014/05/realTimeFractalsReport.pdf
+float dist_mandelbulb(vec3 pos) {
+	vec3 z = pos;
+	float dr = 1.0;
+	float r = 0.0;
+	for (int i = 0; i < MANDELBULB_ITER; i++) {
+		r = length(z);
+		if (r > MANDELBULB_THRESHOLD)
+			break;
+
+		//convert to polar coordinates
+		float theta = acos(z.z/r);
+		float phi = atan(z.y, z.x);
+		dr = pow(r, mandelbulb_power-1.0) * mandelbulb_power * dr + 1.0;
+
+		float zr = pow(r, mandelbulb_power);
+		theta = theta * mandelbulb_power;
+		phi = phi * mandelbulb_power;
+
+		z = zr * vec3(sin(theta) * cos(phi),
+				sin(phi) * sin(theta),
+				cos(theta));
+		z += pos;
+	}
+	return 0.5*log(r)*r/dr;	
 }
 
 void main() {
@@ -48,7 +79,7 @@ void main() {
 	bool escaped = true;
 	int i = 0;
 	for (; i < MARCH_STEPS; i++) {
-		float d = dist(curr_pos);
+		float d = dist_mandelbulb(curr_pos);
 		total_dist += d;
 		curr_pos += d * ray_dir;
 		if (d < MARCH_THRESHOLD) {
